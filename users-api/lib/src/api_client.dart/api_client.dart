@@ -24,10 +24,11 @@ class ApiClient {
   late final UserServiceClient stub;
 
   /// Get the list of users
-  Future<List<User>> getUsers() async {
-    final response = await stub.getUsers(UsersRequest());
-
-    return response.users;
+  Stream<List<User>> getUsers() async* {
+    final response = stub.getUsers(UsersRequest());
+    await for (var users in response) {
+      yield users.users;
+    }
   }
 
   /// Get a single user by id

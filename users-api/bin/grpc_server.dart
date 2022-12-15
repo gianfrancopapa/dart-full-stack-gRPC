@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:rxdart/subjects.dart';
+
 import '../lib/users_api.dart';
 
 class UserService extends UserServiceBase {
@@ -12,6 +14,12 @@ class UserService extends UserServiceBase {
     User(id: '5', name: 'Gianfranco5', email: 'gianfranco@email.com'),
   ];
 
+  late final BehaviorSubject<List<User>> usersStream;
+
+  UserService() {
+    usersStream = BehaviorSubject.seeded(users);
+  }
+
   @override
   Future<User> getUserById(ServiceCall call, UserByIdRequest request) async {
     final userId = request.id;
@@ -23,8 +31,18 @@ class UserService extends UserServiceBase {
   }
 
   @override
-  Future<UsersReponse> getUsers(ServiceCall call, UsersRequest request) async {
-    return UsersReponse(users: users);
+  Stream<UsersReponse> getUsers(ServiceCall call, UsersRequest request) async* {
+    await for (final users in usersStream) {
+      yield UsersReponse(users: users);
+    }
+  }
+
+  @override
+  Future<User> addUser(ServiceCall call, User request) async {
+    final user = request;
+    users.add(user);
+    usersStream.sink.add(users);
+    return user;
   }
 }
 

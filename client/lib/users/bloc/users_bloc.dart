@@ -13,26 +13,39 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
       : _usersRepository = usersRepository,
         super(const UsersState.initial()) {
     on<UsersFetched>(_onUsersFetched);
+
+    _streamSubscription = _usersRepository.getUsers().listen(
+      (users) {
+        add(UsersFetched(users: users));
+      },
+    );
   }
 
   final UsersRepository _usersRepository;
+  late final StreamSubscription _streamSubscription;
 
   Future<void> _onUsersFetched(
-      UsersFetched event, Emitter<UsersState> emit) async {
+    UsersFetched event,
+    Emitter<UsersState> emit,
+  ) async {
     try {
       emit(state.copyWith(status: UsersStatus.loading));
-
-      final users = await _usersRepository.getUsers();
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 1));
 
       emit(
         state.copyWith(
           status: UsersStatus.loaded,
-          users: users,
+          users: event.users,
         ),
       );
     } on UsersRepositoryException {
       emit(state.copyWith(status: UsersStatus.error));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _streamSubscription.cancel();
+    return super.close();
   }
 }

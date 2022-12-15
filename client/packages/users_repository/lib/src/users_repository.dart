@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:users_api/users_api.dart';
 
 abstract class UsersRepositoryException implements Exception {
@@ -27,11 +29,11 @@ class UsersRepository {
 
   final ApiClient _apiClient;
 
-  Future<List<User>> getUsers() async {
+  Stream<List<User>> getUsers() async* {
     try {
-      final users = await _apiClient.getUsers();
-
-      return users;
+      await for (final users in _apiClient.getUsers()) {
+        yield users;
+      }
     } catch (error, stackTrace) {
       throw GetUsersFailure(error, stackTrace);
     }

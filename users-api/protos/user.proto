@@ -19,6 +19,7 @@ message User {
 }
 
 service UserService {
-    rpc getUsers(UsersRequest) returns (UsersReponse);
+    rpc getUsers(UsersRequest) returns (stream UsersReponse);
     rpc getUserById(UserByIdRequest) returns (User);
+    rpc addUser(User) returns (User);
 }
